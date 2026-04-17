@@ -1,0 +1,18 @@
+when:
+  - event: push
+    branch: trunk
+  - event: pull_request
+  - event: manual
+
+steps:
+  scan:
+    image: aquasec/trivy:0.69.3
+    commands:
+      - trivy fs
+          --severity HIGH,CRITICAL
+          --ignore-unfixed
+          --exit-code 1
+          --no-progress
+          .
+    volumes:
+      - /DATA/persistent/trivy:/root/.cache/trivy
