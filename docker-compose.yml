@@ -11,7 +11,7 @@
 # The container runs as your host user (UID/GID) so files written to
 # the cache directories have the correct ownership.  Defaults to 1000:1000.
 
-name: echolok-picodiffusion
+name: picodiffusion
 
 services:
   picodiffusion:
@@ -20,12 +20,12 @@ services:
       # By default, uses the public Dockerfile which downloads PyTorch from
       # the official index.  The first build is slow (~2GB download) but
       # Docker caches it for subsequent builds.
-    image: echolok/picodiffusion:latest
-    container_name: echolok-picodiffusion
+    image: lacquerlabs/picodiffusion:latest
+    container_name: site-picodiffusion-app
     restart: unless-stopped
 
     labels:
-      - dev.dozzle.group=echolok-tools
+      - dev.dozzle.group=lacquerlabs-tools
 
     networks:
       - network_proxy

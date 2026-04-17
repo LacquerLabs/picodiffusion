@@ -10,7 +10,7 @@
 #   If nvidia-smi is found, the GPU override compose file is layered in
 #   automatically.  No manual flags needed.
 
-.PHONY: build up down logs
+.PHONY: build up down logs scan
 
 # Detect NVIDIA GPU and layer the GPU override if available.
 HAS_NVIDIA := $(shell nvidia-smi > /dev/null 2>&1 && echo yes || echo no)
@@ -34,3 +34,16 @@ down:
 # Tail container logs.  Press Ctrl+C to stop watching.
 logs:
 	$(COMPOSE) logs -f
+
+# Scan source and dependencies for HIGH/CRITICAL CVEs with available fixes.
+scan:
+	docker run --rm \
+		-v $(PWD):/workspace \
+		-v /DATA/persistent/trivy:/root/.cache/trivy \
+		aquasec/trivy:0.69.3 \
+		fs \
+		--severity HIGH,CRITICAL \
+		--ignore-unfixed \
+		--exit-code 1 \
+		--no-progress \
+		/workspace
