@@ -1,0 +1,24 @@
+# docker-compose.gpu.yml — NVIDIA GPU passthrough for picoDiffusion.
+#
+# This file is layered on top of docker-compose.yml when an NVIDIA GPU
+# is detected.  The Makefile does this automatically.
+#
+# Manual usage:
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+
+services:
+  picodiffusion:
+    environment:
+      # Make all NVIDIA GPUs visible inside the container.
+      NVIDIA_VISIBLE_DEVICES: all
+      # Grant access to CUDA compute and nvidia-smi utility.
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            # Reserve all available NVIDIA GPUs for this container.
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>picoDiffusion</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+
+  <h1>pico<span class="brand-accent">Diffusion</span> <span>/ sd1.5</span></h1>
+
+  <div id="status-bar">
+    <div id="status-dot" class="idle"></div>
+    <span id="status-text">select a model and generate</span>
+  </div>
+
+  <div class="layout">
+
+    <!-- left: controls -->
+    <div class="card">
+
+      <!-- model selection -->
+      <label>
+        <span class="label-row">checkpoint <button class="help-btn" data-help="checkpoint">💬</button></span>
+        <select id="checkpoint">
+          <option value="">— loading list —</option>
+        </select>
+      </label>
+
+      <label>
+        <span class="label-row">vae <button class="help-btn" data-help="vae">💬</button></span>
+        <select id="vae">
+          <option value="">none (use checkpoint embedded)</option>
+        </select>
+      </label>
+
+      <label>
+        <span class="label-row">lora <button class="help-btn" data-help="lora">💬</button></span>
+        <select id="lora">
+          <option value="">none</option>
+        </select>
+      </label>
+
+      <div class="slider-group" id="lora-weight-group" style="display: none;">
+        <div class="slider-label"><span class="label-row">lora weight <button class="help-btn"
+              data-help="lora-weight">💬</button></span> <span id="lora-weight-val" class="slider-value">{{
+            defaults.lora_weight }}</span>
+        </div>
+        <input type="range" id="lora-weight" min="0" max="2.0" step="0.05" value="{{ defaults.lora_weight }}">
+      </div>
+
+      <label>
+        <span class="label-row">sampler <button class="help-btn" data-help="sampler">💬</button></span>
+        <select id="sampler">
+          {% for s in defaults.samplers %}
+          <option value="{{ s }}" {% if s==defaults.sampler %} selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <hr class="divider">
+
+      <label>
+        <span class="label-row">prompt <button class="help-btn" data-help="prompt">💬</button></span>
+        <textarea id="prompt" rows="4">{{ defaults.prompt }}</textarea>
+      </label>
+
+      <label>
+        <span class="label-row">negative prompt <button class="help-btn" data-help="negative-prompt">💬</button></span>
+        <textarea id="negative_prompt" rows="3">{{ defaults.negative_prompt }}</textarea>
+      </label>
+
+      <div class="row">
+        <div class="slider-group">
+          <div class="slider-label"><span class="label-row">steps <button class="help-btn"
+                data-help="steps">💬</button></span> <span id="steps-val" class="slider-value">{{ defaults.steps
+              }}</span></div>
+          <input type="range" id="steps" min="1" max="60" value="{{ defaults.steps }}">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label"><span class="label-row">cfg <button class="help-btn"
+                data-help="cfg">💬</button></span> <span id="cfg-val" class="slider-value">{{ defaults.cfg }}</span>
+          </div>
+          <input type="range" id="cfg" min="1" max="20" step="0.5" value="{{ defaults.cfg }}">
+        </div>
+      </div>
+
+      <label>
+        <span class="label-row">seed <button class="help-btn" data-help="seed">💬</button></span>
+        <div class="seed-row">
+          <input type="number" id="seed" placeholder="leave blank for random" min="0" max="4294967295">
+          <button id="dice-btn" title="random seed">&#9861;</button>
+        </div>
+      </label>
+
+      <div class="seed-lock">
+        <input type="checkbox" id="seed-lock">
+        <span class="seed-lock-label">lock seed</span>
+      </div>
+
+      <span class="size-label">output size <button class="help-btn" data-help="output-size">💬</button></span>
+      <div class="row">
+        <div class="slider-group">
+          <div class="slider-label">width <span id="width-val" class="slider-value">{{ defaults.width }}</span></div>
+          <input type="range" id="width" min="{{ defaults.output_min }}" max="{{ defaults.output_max }}"
+            step="{{ defaults.output_step }}" value="{{ defaults.width }}">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">height <span id="height-val" class="slider-value">{{ defaults.height }}</span></div>
+          <input type="range" id="height" min="{{ defaults.output_min }}" max="{{ defaults.output_max }}"
+            step="{{ defaults.output_step }}" value="{{ defaults.height }}">
+        </div>
+      </div>
+
+      <button id="generate-btn" disabled>Generate</button>
+    </div>
+
+    <!-- right: output -->
+    <div class="output-card">
+      <div id="placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+        output will appear here
+      </div>
+
+      <div id="progress-overlay">
+        <div class="spinner"></div>
+        <div id="progress-bar-wrap">
+          <div id="progress-bar"></div>
+        </div>
+        <div id="progress-text">step 0 / 0</div>
+        <div id="timer">0s</div>
+      </div>
+
+      <img id="output-image" alt="generated image">
+      <div id="meta"></div>
+      <a id="download-link" style="display: none;">save image</a>
+      <div id="error-msg"></div>
+    </div>
+
+  </div>
+
+  <!-- help panel -->
+  <div id="help-panel">
+    <div id="help-panel-header">
+      <span id="help-panel-title"></span>
+      <button id="help-panel-close">&times;</button>
+    </div>
+    <div id="help-panel-body"></div>
+  </div>
+
+  <footer id="site-footer">
+    <strong class="brand-name">pico<span class="brand-accent">Diffusion</span></strong> · a minimal sd1.5 image generator 🐾 lacquerlabs © <span id="footer-year"></span>
+  </footer>
+
+  <script src="/static/script.js"></script>
+</body>
+
+</html>

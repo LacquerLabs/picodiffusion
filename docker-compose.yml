@@ -1,0 +1,77 @@
+# docker-compose.yml — picoDiffusion
+#
+# Runs the picoDiffusion image generation service.
+# GPU support is added by layering docker-compose.gpu.yml on top.
+# The Makefile does this automatically if it detects an NVIDIA GPU.
+#
+# Volumes:
+#   ./cache/models      → /models (read-only) — checkpoints, VAEs, LoRAs
+#   ./cache/huggingface → /cache/huggingface   — HuggingFace download cache
+#
+# The container runs as your host user (UID/GID) so files written to
+# the cache directories have the correct ownership.  Defaults to 1000:1000.
+
+name: echolok-picodiffusion
+
+services:
+  picodiffusion:
+    build:
+      context: .
+      # By default, uses the public Dockerfile which downloads PyTorch from
+      # the official index.  The first build is slow (~2GB download) but
+      # Docker caches it for subsequent builds.
+    image: echolok/picodiffusion:latest
+    container_name: echolok-picodiffusion
+    restart: unless-stopped
+
+    labels:
+      - dev.dozzle.group=echolok-tools
+
+    networks:
+      - network_proxy
+      - echolok_network
+
+    expose:
+      - 8004
+    ports:
+      - "8004:8004"
+
+    # Run as the host user so bind-mounted files have correct ownership.
+    # Override UID/GID with environment variables if your user is not 1000.
+    user: "${UID:-1000}:${GID:-1000}"
+
+    # Resource limits.  These apply to CPU inference only — CUDA runs on
+    # the GPU and is not affected by these limits.  The CPU and memory
+    # limits prevent the container from consuming all system resources
+    # if it falls back to CPU mode.
+    deploy:
+      resources:
+        limits:
+          cpus: "6"
+          memory: 1g
+
+    volumes:
+      # Model files (checkpoints, VAEs, LoRAs).  Read-only because the
+      # Model files.  Mounted into the working directory so they match
+      # the relative paths in config.py.  Read-only because the app
+      # only reads these files, never writes to them.
+      - ./cache/models:/app/cache/models:ro
+
+      # HuggingFace cache.  Writable because diffusers downloads small
+      # config files here on first run.  Persisted on the host so it
+      # survives container restarts.
+      - ./cache/huggingface:/app/cache/huggingface
+
+    # Health check probes the /health endpoint.  Used by Docker to know
+    # if the container is alive and by the Makefile's --wait flag.
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8004/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  network_proxy:
+    external: true
+  echolok_network:
+    external: true

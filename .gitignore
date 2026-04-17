@@ -1,0 +1,33 @@
+# Model files (large, user-provided)
+cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+venv/
+.venv/
+*.egg
+
+# pyenv
+.python-version
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker local development (echolok-specific)
+Dockerfile.local
+docker-compose.local.yml
