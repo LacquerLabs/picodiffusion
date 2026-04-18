@@ -21,7 +21,7 @@ services:
       # the official index.  The first build is slow (~2GB download) but
       # Docker caches it for subsequent builds.
     image: lacquerlabs/picodiffusion:latest
-    container_name: site-picodiffusion-app
+    container_name: picodiffusion-app
     restart: unless-stopped
 
     expose:
