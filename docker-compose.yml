@@ -41,7 +41,7 @@ services:
       resources:
         limits:
           cpus: "6"
-          memory: 1g
+          memory: 4g
 
     volumes:
       # Model files (checkpoints, VAEs, LoRAs).  Read-only because the
