@@ -24,13 +24,6 @@ services:
     container_name: site-picodiffusion-app
     restart: unless-stopped
 
-    labels:
-      - dev.dozzle.group=lacquerlabs-tools
-
-    networks:
-      - network_proxy
-      - echolok_network
-
     expose:
       - 8004
     ports:
@@ -69,9 +62,3 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-
-networks:
-  network_proxy:
-    external: true
-  echolok_network:
-    external: true
